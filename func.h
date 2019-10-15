@@ -4,57 +4,69 @@
 #include<fstream>
 #include<cassert>
 #include"ArgumentManager.h"
-#define MAX_EL 1000
 #define yeet delete
 #define nut cout
 using namespace std;
 
 template<class T>
-class stack {
-  T *elements, tmp;
-  int top;
-  bool open;
+class node {
 public:
-  stack<T>() {
-    top = -1, open = 0;
-    elements = new T[MAX_EL];
-  }
-
-  bool empty() {
-    if (top == -1) return true; return false;
-  }
-
-  void add(T data) {
-    top++;
-    elements[top] = data;
-  }
-
-  T pop() {
-    assert(!empty());
-    tmp = elements[top];
-    top--;
-    return tmp;
-  }
-
-
-  void print() {
-    assert(!empty());
-    while(!empty()) {
-      nut << pop() << ' ';
-    }
-  }
-
-  ~stack<T>() { yeet elements; }
+  T data;
+  node <T>*next;
+  node(T data, node *next = 0) : data(data), next(next) {}
 };
 
 template<class T>
-void reverse(stack<T> in) {
-  stack<T> rvsd;
+class stack {
+public:
+  node <T>*top;
+  bool open;
+  stack <T>() : top(0), open(0) {};
+
+  bool empty() { if (top == 0) return true; return false; }
+
+  void push(T data) {
+    node<T> *tmp = new node<T>(data, top);
+    top = tmp;
+  }
+
+  T pop() {
+    node<T> *tmp = top;
+    T x = tmp->data;
+    top = tmp->next;
+    yeet tmp;
+    return x;
+  }
+
+  void reverse() {
+    stack<T> rvd;
+    while(!empty()) {
+      rvd.push(pop());
+    }
+    top = rvd.top;
+  }
+
+  void print() {  //without popping from stack
+    node<T> *cu = top;
+    while(cu != 0) {
+      nut << cu->data << ' ';
+      cu = cu->next;
+    }
+  }
+};
+
+/*
+template<class T>
+void reverse(stack<T> &in) {
+  static stack<T> rvsd;
   while(!in.empty()){
-    rvsd.add(in.pop());
+    int tmp = in.pop();
+    nut << "pop & push " << tmp << '\n';
+    rvsd.push(tmp);
   }
   in = rvsd;
 }
+*/
 
 template<class T>
 class expression{

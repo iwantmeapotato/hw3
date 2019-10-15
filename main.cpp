@@ -21,10 +21,13 @@ int main(int argc, char *argv[])  {
 
   stack<int> pp;
   for (int i = 0; i < 15; i++) {
-    pp.add(i);
+    pp.push(i);
   }
 
-  reverse(pp);
+
+  pp.print();
+  nut << '\n';
+  pp.reverse();
   pp.print();
 
 
