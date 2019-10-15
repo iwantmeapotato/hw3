@@ -19,17 +19,21 @@ int main(int argc, char *argv[])  {
   ifstream ifs(in);
 
 
-  stack<int> pp;
-  for (int i = 0; i < 15; i++) {
-    pp.push(i);
+  string expr;
+  while (!ifs.eof()) {
+    getline(ifs, expr);
+    expression function(expr);
+    nut << function.evaluate() << '\n';
   }
 
+  // stack<long long int> pp;
 
-  pp.print();
-  nut << '\n';
-  pp.reverse();
-  pp.print();
 
+  /*
+  0*00000000000000000+0000000000000001=1
+  -(-(-1))+3=2
+  (-1*(3+5))=-8
+  */
 
 
 

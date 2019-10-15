@@ -6,6 +6,7 @@
 #include"ArgumentManager.h"
 #define yeet delete
 #define nut cout
+#define ERROR 6969
 using namespace std;
 
 template<class T>
@@ -55,24 +56,57 @@ public:
   }
 };
 
-/*
-template<class T>
-void reverse(stack<T> &in) {
-  static stack<T> rvsd;
-  while(!in.empty()){
-    int tmp = in.pop();
-    nut << "pop & push " << tmp << '\n';
-    rvsd.push(tmp);
-  }
-  in = rvsd;
-}
-*/
 
-template<class T>
 class expression{
-  string exp;
+  string original, s_exp; //og if pass by ref.
 public:
-  expression(string ex) {
+  expression(string ex) : original(ex), s_exp(ex) {
 
   }
+
+  int function(string expr) { //numerical evaluation
+    stack<long long int> numbers;
+    stack<char> operators;
+    istringstream ss(expr);
+    int tmp_i; char tmp_c;
+    while (!ss.eof()) {
+      if (ss.peek() >= '0' && ss.peek() <= '9') {
+        ss >> tmp_i;
+        numbers.push(tmp_i);
+      }
+      else {
+        ss >> tmp_c;
+        if (tmp_c == '(') { //recurse
+          string subf = "";
+          while (tmp_c != ')') {
+            ss >> tmp_c;
+            if (tmp_c != ')') subf += tmp_c;
+            if (ss.eof()) throw -1;
+          }
+          numbers.push(function(subf));
+        }
+        else operators.push(tmp_c);
+      }
+    }
+
+    //eval stacks
+
+
+
+    return numbers.top->data;
+  }
+
+
+  string evaluate() {
+    function(s_exp);
+    int result;
+    try {
+      result = function(s_exp);
+    }
+    catch(...) { return "error"; }
+
+    return original + "=" + to_string(result);
+  }
+
+
 };
