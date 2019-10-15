@@ -20,19 +20,30 @@ int main(int argc, char *argv[])  {
 
 
   string expr;
+  /*
   while (!ifs.eof()) {
     getline(ifs, expr);
     expression function(expr);
     nut << function.evaluate() << '\n';
   }
+  */
 
-  // stack<long long int> pp;
+
+  expr = "(1+2)*(1000+2000)";
+  expression function(expr);
+  nut << function.evaluate() << '\n';
+
 
 
   /*
   0*00000000000000000+0000000000000001=1
+  (1+2)*(1000+2000)=9000
+  (+1+2)*(1000+2000)=9000
   -(-(-1))+3=2
   (-1*(3+5))=-8
+
+  ((1+2)*(1000+2000))*(1+10000)=90009000 <----
+
   */
 
 
