@@ -3,18 +3,22 @@
 #include<sstream>
 #include<fstream>
 #include<cassert>
+#include<cmath>
 #include"ArgumentManager.h"
 #define yeet delete
-#define nut cout
-#define ERROR 6969
+#define yell cout
+#define MAX_ELS 1000
+#define POSTFIX true
+#define STRING false
 using namespace std;
 
 template<class T>
 class node {
 public:
   T data;
+  bool negative;
   node <T>*next;
-  node(T data, node *next = 0) : data(data), next(next) {}
+  node(T data, bool n, node *next = 0) : data(data), negative(n), next(next) {}
 };
 
 template<class T>
@@ -26,8 +30,8 @@ public:
 
   bool empty() { if (top == 0) return true; return false; }
 
-  void push(T data) {
-    node<T> *tmp = new node<T>(data, top);
+  void push(T data, bool neg = 0) {
+    node<T> *tmp = new node<T>(data, neg, top);
     top = tmp;
   }
 
@@ -50,117 +54,112 @@ public:
   void print() {  //without popping from stack
     node<T> *cu = top;
     while(cu != 0) {
-      nut << cu->data << ' ';
+      yell << cu->data << " ";
       cu = cu->next;
     }
   }
+  void rprint() {//
+    reverse(); print(); reverse();
+  }
 };
-
+int priority(char x) {
+  if (x == '^') return 3;
+  else if (x == '*' || x == '/') return 2;
+  else if (x == '+' || x == '-') return 1;
+  else if (x == '(') return 0;
+  return -69;
+}
 
 class expression{
-  string original, s_exp; //og if pass by ref.
+  string s_exp; //og if pass by ref.
+  stack<string> post_exp;
 public:
-  expression(string ex) : original(ex), s_exp(ex) {
-
+  expression(string ex) : s_exp(ex) {
+    function();
   }
 
-  string simplify(string expr) { //get rid of parentheses
-    istringstream ss(expr);
-    string simplified = "", subfunc = "";
+  bool straighten() {
+    char curr, prev;
 
-    char tmp;
-    while(ss >> tmp) {
-      cout << "  step: " << simplified << '\n';
-      if (tmp == '(') {
-        
-      }
+    stringstream ss(s_exp);
+    while (ss >> curr) {
+      //if adjacent ()() then *
 
-      else simplified += tmp;
+      prev = curr;
     }
 
-
-    cout << "simplified: " << simplified << "\n\n";
-    return simplified;
+    return false;
   }
 
-  int function(string expr) { //numerical evaluation
-    cout << "\n\nNEW FUNCTION: " << expr << "\n\n";
+  int function() { //numerical evaluation
+    stack<char> operators;
+    istringstream ss(s_exp);
+    long long int stream_i; char stream_c, s_top;
+
+    //create postfix
+    while (!ss.eof()) {
+      if (ss.peek() >= '0' && ss.peek() <= '9') { //is a number
+        ss >> stream_i;
+        post_exp.push(to_string(stream_i), 0);
+      }
+
+      else {  ///is an operator
+        ss >> stream_c; if (ss.eof()) break; //don't know why but this is needed
+        if (operators.empty() || stream_c == '(') operators.push(stream_c);
+        else if (stream_c == ')') {  //if close parens
+          while (operators.top->data != '(') {  //pop until find the open
+            post_exp.push(string(1, operators.pop()));
+          }
+          operators.pop();
+        }
+        else {  ///functional operators
+          s_top = operators.top->data;
+          while(!operators.empty() && priority(stream_c) <= priority(s_top)) {
+            s_top = operators.pop();
+            post_exp.push(string(1, s_top));
+            if (!operators.empty()) s_top = operators.top->data;
+          } //sure to reset top->data so while() condition can compare the popped op with the correct next one
+          operators.push(stream_c);
+        }
+      }
+    }
+    while(!operators.empty()) post_exp.push(string(1,operators.pop())); //out of #s, dump the rest
+
+    return 0;
+  }
+
+  long long int evaluate() {
     stack<long long int> numbers;
     stack<char> operators;
-    istringstream ss(expr);
-    int tmp_i; char tmp_c;
+    char op;
+    long long int a, b;
 
-    //simplify into stacks
-    while (!ss.eof()) {
-      if (ss.peek() >= '0' && ss.peek() <= '9') {
-        ss >> tmp_i;
-        numbers.push(tmp_i);
+    post_exp.reverse();
+    while(!post_exp.empty()) {  //final element
+      char testchar = post_exp.top->data[0];
+      // yell << "\nleft: "; post_exp.print(); yell << "\nnums: "; numbers.rprint(); yell << '\n';
+      if ((testchar >= '0' && testchar <= '9')) {
+        numbers.push(stoll(post_exp.pop()));
       }
-
       else {
-        ss >> tmp_c;
-
-        //if open parens
-        if (tmp_c == '(') { //recurse
-          int sf_open = 0;
-          string subf = "";
-          while (!ss.eof()) {
-            ss >> tmp_c;  //after opening paren
-
-            if (tmp_c == '(') {
-              sf_open++;
-              subf += tmp_c;
-            }
-
-            else if (tmp_c == ')') {
-              sf_open--;
-              if (sf_open <= -1) { //outermost
-                numbers.push(function(subf));
-                subf = "";
-                sf_open = 0;
-                ss >> tmp_c;
-                // break;
-              }
-              else subf += tmp_c;
-            }
-
-            else { subf += tmp_c; }
-
-            cout << "\ncurrent string: " << expr << "\nsubf = " << subf << "\nsf_open = " << sf_open << ", tmp_c = " << tmp_c << '\n';
-            system("pause");
-
-            if (sf_open == 0 && tmp_c == ')') break;
-          }
-          // if (ss.eof()) throw -1;
-          nut << "\nsubfunction: " << subf << '\n';
-          numbers.push(function(subf));
-        }
-
-        //else its an operator
-        else operators.push(tmp_c);
+        b = numbers.pop(); a = numbers.pop();
+        op = post_exp.pop()[0];
+        // yell << "doing " << a << op << b << '\n';
+        if (op == '^' || op == '$') numbers.push(pow(a,b));
+        else if (op == '*') numbers.push(a*b);
+        else if (op == '/') numbers.push(a/b);
+        else if (op == '+') numbers.push(a+b);
+        else if (op == '-') numbers.push(a-b);
       }
-
-      cout << string(3, '\n');
     }
-    //eval stacks
-    cout << "\nFUNCTION CLOSED, RETURNING " << numbers.top->data << "\n";
     return numbers.top->data;
   }
 
-
-  string evaluate() {
-    simplify(s_exp);
-    /*
-    function(s_exp);
-    int result;
-    try {
-      result = function(s_exp);
+  void print(bool postfix = STRING) {
+    if (postfix) {
+      post_exp.rprint();
     }
-    catch(...) { return "error"; }
-    return original + "=" + to_string(result);
-    */
-    return "";
+    else yell << s_exp;
   }
-
 
 };
