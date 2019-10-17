@@ -58,4 +58,4 @@ else
     echo -e "Test case 3    \033[1;92mPASSED.\033[0m"
     rm -f 3.diff
 fi
-
+read
