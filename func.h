@@ -2,7 +2,6 @@
 #include<iostream>
 #include<sstream>
 #include<fstream>
-#include<cassert>
 #include<cmath>
 #include"ArgumentManager.h"
 #define yeet delete
@@ -16,22 +15,20 @@ template<class T>
 class node {
 public:
   T data;
-  bool negative;
   node <T>*next;
-  node(T data, bool n, node *next = 0) : data(data), negative(n), next(next) {}
+  node(T data, node *next = 0) : data(data), next(next) {}
 };
 
 template<class T>
 class stack {
 public:
   node <T>*top;
-  bool open;
-  stack <T>() : top(0), open(0) {};
+  stack <T>() : top(0) {};
 
   bool empty() { if (top == 0) return true; return false; }
 
   void push(T data, bool neg = 0) {
-    node<T> *tmp = new node<T>(data, neg, top);
+    node<T> *tmp = new node<T>(data, top);
     top = tmp;
   }
 
@@ -58,7 +55,7 @@ public:
       cu = cu->next;
     }
   }
-  void rprint() {//
+  void rprint() {
     reverse(); print(); reverse();
   }
 };
@@ -71,27 +68,47 @@ int priority(char x) {
 }
 
 class expression{
-  string s_exp; //og if pass by ref.
+  string s_exp, orig;
   stack<string> post_exp;
+  long long int eval;
 public:
-  expression(string ex) : s_exp(ex) {
+  bool valid;
+  expression(string ex) : s_exp(""), orig(ex), valid(true) {
+    if (!straighten()) { valid = false; return; }
     function();
+    evaluate();
   }
 
   bool straighten() {
-    char curr, prev;
+    for (int i = 0; i < orig.length(); i++) if (orig[i] != ' ') s_exp += orig[i]; //remove spaces
+    char curr, prev = '!', tmp;
+    int pos = 0, added = 0, s_rmvd = 0;
+    stringstream bal_chk(s_exp);
+    stack<char> parens;
+    string pairs[3] = { "()", "{}", "[]" };
 
-    stringstream ss(s_exp);
-    while (ss >> curr) {
-      //if adjacent ()() then *
-
+    while (bal_chk >> curr) {
+      if ((curr == '-' || curr == '+') && (prev == '!' || prev == '(')) { s_exp.insert(pos + added, "0"); added++; }
+      // if (curr == '(' && prev == ')') { s_exp.insert(pos + added, "*"); added++; }(
+      if ((prev == '+' && curr == '+') || (prev == '-' && curr == '-') || (prev == '*' && curr == '*') || (prev == '/' && curr == '/') || (prev == '(' && curr == '*') || (prev == '(' && curr == '/') || (prev == '+' && curr == '-') || (prev == '+' && curr == '/') || (prev == '+' && curr == '*') || (prev == '-' && curr == '+') || (prev == '-' && curr == '/') || (prev == '-' && curr == '*') || (prev == '*' && curr == '+') || (prev == '*' && curr == '-') || (prev == '*' && curr == '/') || (prev == '/' && curr == '+') || (prev == '/' && curr == '-') || (prev == '/' && curr == '*') || (prev == '+' && curr == ')') || (prev == '-' && curr == ')') || (prev == '*' && curr == ')') || (prev == '/' && curr == ')') || (prev == ')' && curr == '(') || (prev == '(' && curr == ')') || (prev == ')' && isdigit(curr)) || (isdigit(prev) && curr == '(') || (prev == '!' && curr == '*') || (prev == '!' && curr == '/') || ((bal_chk.peek() == -1) && (curr == '-' || curr == '+' || curr == '*' || curr == '/')) || (!isdigit(curr) && (curr != '+' && curr != '-' && curr != '*' && curr != '/' && curr != '(' && curr != ')')) ) return false;  ///FIXME
+      for (int i = 0; i < 3; i++) {
+        if (curr == pairs[i][0]) parens.push(curr);
+      }
+      for (int i = 0; i < 3; i++) {
+        if (curr == pairs[i][1]) {
+          if (parens.empty()) return false;
+          tmp = parens.pop();
+          if (tmp != pairs[i][0]) return false; //closing nonexistent parentheses
+        }
+      }
       prev = curr;
+      pos++;
     }
-
-    return false;
+    if (!parens.empty()) return false;
+    return true;
   }
 
-  int function() { //numerical evaluation
+  void function() { //numerical evaluation
     stack<char> operators;
     istringstream ss(s_exp);
     long long int stream_i; char stream_c, s_top;
@@ -102,7 +119,6 @@ public:
         ss >> stream_i;
         post_exp.push(to_string(stream_i), 0);
       }
-
       else {  ///is an operator
         ss >> stream_c; if (ss.eof()) break; //don't know why but this is needed
         if (operators.empty() || stream_c == '(') operators.push(stream_c);
@@ -124,8 +140,6 @@ public:
       }
     }
     while(!operators.empty()) post_exp.push(string(1,operators.pop())); //out of #s, dump the rest
-
-    return 0;
   }
 
   long long int evaluate() {
@@ -152,14 +166,14 @@ public:
         else if (op == '-') numbers.push(a-b);
       }
     }
+    eval = numbers.top->data;
     return numbers.top->data;
   }
 
-  void print(bool postfix = STRING) {
-    if (postfix) {
-      post_exp.rprint();
-    }
-    else yell << s_exp;
+  string print(bool postfix = STRING) {
+    if (postfix) post_exp.rprint();
+    else yell << orig << '=' << eval << '\n';
+    return orig + '=' + to_string(eval);
   }
 
 };
